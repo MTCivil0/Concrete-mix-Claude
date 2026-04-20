@@ -34,9 +34,42 @@ with st.sidebar:
     st.markdown("**About this tool**")
     st.caption("ACI 211.1 (PCA Method) proportioning with AI-assisted durability analysis. Not a substitute for a licensed engineer.")
 
+# ── Global SDSU CSS ───────────────────────────────────────────────────────────
+st.markdown("""
+<style>
+/* SDSU Blue header strip */
+.sdsu-header {
+    background: #0033A0;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 8px 8px 0 0;
+    font-weight: 700;
+    font-size: 15px;
+}
+.sdsu-gold-bar {
+    height: 4px;
+    background: #FFB71B;
+    border-radius: 0 0 4px 4px;
+    margin-bottom: 14px;
+}
+/* Style all Streamlit buttons in chat area with SDSU feel */
+div[data-testid="column"] button {
+    border-left: 3px solid #0033A0 !important;
+    font-size: 12px !important;
+}
+div[data-testid="column"] button:hover {
+    border-left: 3px solid #FFB71B !important;
+    background: #E6EBF5 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # ── Header ────────────────────────────────────────────────────────────────────
-st.markdown("##### Teymouri Research Lab · South Dakota State University")
-st.title("🧱 Concrete Mix Design Copilot")
+st.markdown("""
+<div class="sdsu-header">🧱 &nbsp; Teymouri Research Lab · South Dakota State University</div>
+<div class="sdsu-gold-bar"></div>
+""", unsafe_allow_html=True)
+st.title("Concrete Mix Design Copilot")
 st.caption("ACI 211.1 proportioning + AI-assisted durability analysis and QC guidance")
 st.divider()
 
@@ -376,14 +409,16 @@ else:
 # MODE C: STUDENT CONCRETE Q&A CHATBOX
 # ─────────────────────────────────────────────────────────────────────────────
 if "Q&A" in mode:
-    st.subheader("💬 Concrete Q&A — Ask anything about concrete")
-    st.caption(
-        "Ask about concrete properties, ASTM/ACI test standards, mix design theory, "
-        "durability, admixtures, or SCMs. Tuned for construction engineering students."
-    )
+    st.markdown("""
+    <div style="background:#0033A0; padding:14px 18px 10px 18px; border-radius:8px; margin-bottom:4px;">
+        <span style="color:#FFB71B; font-size:18px; font-weight:700;">💬 Concrete Q&A</span><br>
+        <span style="color:#B3C3E8; font-size:13px;">Ask about concrete properties, ASTM/ACI test standards, mix design theory, durability, admixtures, or SCMs — tuned for construction engineering students at SDSU.</span>
+    </div>
+    <div style="height:4px; background:#FFB71B; border-radius:0 0 4px 4px; margin-bottom:12px;"></div>
+    """, unsafe_allow_html=True)
 
     # ── Suggested questions ───────────────────────────────────────────────────
-    st.markdown("**Quick questions to get started:**")
+    st.markdown("""<div style="background:#E6EBF5; border-left:4px solid #0033A0; padding:7px 14px; border-radius:0 6px 6px 0; margin-bottom:8px;"><span style="color:#0033A0; font-weight:600; font-size:14px;">Quick questions to get started</span></div>""", unsafe_allow_html=True)
     q_col1, q_col2, q_col3 = st.columns(3)
     suggestions = [
         ("What is ASTM C143 — slump test?", q_col1),
@@ -483,9 +518,11 @@ Always be encouraging and specific. Never give a generic list when a specific st
 
 **Key rule:** If the concrete shears or falls apart (shear slump), the test is not valid — resample and retest.
 
-**Official standard:** ASTM C143 — [Read free scope & summary on ASTM.org](https://www.astm.org/c0143_c0143m-20.html)
-**Free reference:** [Portland Cement Association — Workability Overview](https://www.cement.org/learn/concrete-technology/concrete-design-production/workability)
-**Wikipedia overview:** [Concrete slump test — Wikipedia](https://en.wikipedia.org/wiki/Concrete_slump_test)
+**Find it online — search Google for:**
+- 🔍 `ASTM C143 slump test PDF free`
+- 🔍 `concrete slump test procedure step by step`
+- 🔍 `ASTM C143 standard scope astm.org`
+- 🔍 `slump test concrete workability ACI`
 
 **Related standards:**
 - **ASTM C172** — Sampling fresh concrete (required before C143)
@@ -518,9 +555,11 @@ Always be encouraging and specific. Never give a generic list when a specific st
 - Average of two cylinders must ≥ specified f'c
 - No individual cylinder < f'c − 500 psi (if f'c ≤ 5000 psi)
 
-**Official standard:** ASTM C39 — Free scope/abstract at [astm.org](https://www.astm.org/c0039_c0039m-21.html) | Full text via SDSU library
-**Free reference:** [PCA — Compressive Strength Testing](https://www.cement.org/learn/concrete-technology/concrete-construction/testing-and-quality)
-**Wikipedia overview:** [Compressive strength of concrete — Wikipedia](https://en.wikipedia.org/wiki/Compressive_strength_of_concrete)
+**Find it online — search Google for:**
+- 🔍 
+- 🔍 
+- 🔍 
+- 🔍 
 
 **Related standards:**
 - **ASTM C192** — Making and curing specimens in the lab
@@ -558,9 +597,11 @@ Always be encouraging and specific. Never give a generic list when a specific st
 
 **Important:** ASTM C231 is for **normal-weight** aggregate only. Use **ASTM C173** (volumetric method) for lightweight aggregate or slag aggregate.
 
-**Official standard:** ASTM C231 — Free scope/abstract at [astm.org](https://www.astm.org/c0231_c0231m-22.html) | Full text via SDSU library
-**Free reference:** [PCA — Air Entrained Concrete](https://www.cement.org/learn/concrete-technology/durability/freeze-thaw-resistance)
-**Wikipedia overview:** [Air entrainment — Wikipedia](https://en.wikipedia.org/wiki/Air_entrainment)
+**Find it online — search Google for:**
+- 🔍 
+- 🔍 
+- 🔍 
+- 🔍 
 
 **Related standards:**
 - **ASTM C173** — Air content by volumetric method (lightweight aggregate)
@@ -674,9 +715,11 @@ w/cm = Water (lbs/CY) ÷ Total cementitious (lbs/CY)
 
 **Important:** RCPT measures electrical conductance, not chloride directly — high SCM content can lower readings independently of actual permeability. Confirm with **ASTM C1556** (bulk diffusion) for SCM-rich mixes.
 
-**Official standard:** ASTM C1202 — Free scope/abstract at [astm.org](https://www.astm.org/c1202-22.html) | Full text via SDSU library
-**Free FHWA reference:** [Chloride Permeability — FHWA](https://www.fhwa.dot.gov/infrastructure/materialsgrp/chloride.cfm)
-**Wikipedia overview:** [Rapid chloride permeability test — Wikipedia](https://en.wikipedia.org/wiki/Rapid_chloride_permeability_test)
+**Find it online — search Google for:**
+- 🔍 
+- 🔍 
+- 🔍 
+- 🔍 
 
 **Related standards:**
 - **ASTM C1556** — Bulk diffusion test (more accurate for SCM mixes)
@@ -720,10 +763,12 @@ w/cm = Water (lbs/CY) ÷ Total cementitious (lbs/CY)
 **ACI reference:** ACI 237R-07 — Self-Consolidating Concrete
 
 **Official standards:**
-- ASTM C1611 — Free scope at [astm.org](https://www.astm.org/c1611_c1611m-21.html)
-- ASTM C1621 — Free scope at [astm.org](https://www.astm.org/c1621_c1621m-17.html)
-- **Free ACI guide:** [ACI 237R — Self-Consolidating Concrete (free download)](https://www.concrete.org/store/productdetail.aspx?ItemID=23710)
-- **Wikipedia:** [Self-consolidating concrete — Wikipedia](https://en.wikipedia.org/wiki/Self-consolidating_concrete)""",
+**Find it online — search Google for:**
+- 🔍 
+- 🔍 
+- 🔍 
+- 🔍 
+- 🔍 """,
 
         "uhpc": """**Ultra-High-Performance Concrete (UHPC) — Properties and Testing**
 
@@ -757,9 +802,12 @@ Concrete with compressive strength ≥ **14,500 psi (100 MPa)**, exceptional dur
 - Measures load vs mid-point deflection curve
 - Captures post-crack toughness — critical for UHPC
 
-**Free FHWA report:** [FHWA-HRT-14-084 — UHPC State-of-the-Art (free PDF)](https://www.fhwa.dot.gov/publications/research/infrastructure/structures/hpc/14084/14084.pdf)
-**Wikipedia:** [Ultra-high-performance concrete — Wikipedia](https://en.wikipedia.org/wiki/Ultra-high-performance_concrete)
-**ACI reference:** ACI 239R (in development — check concrete.org for latest)
+**Find it online — search Google for:**
+- 🔍 
+- 🔍 
+- 🔍 
+- 🔍 
+- 🔍 
 
 **Curing:** UHPC typically requires **steam curing at 194°F (90°C) for 48 hours** to achieve full strength.
 
@@ -809,10 +857,12 @@ Concrete with compressive strength ≥ **14,500 psi (100 MPa)**, exceptional dur
 | > 0.020" | Severe — structural concern |
 
 **Related standards:**
-- ASTM C597 — Free scope at [astm.org](https://www.astm.org/c0597-16.html)
-- ASTM C1383 — Free scope at [astm.org](https://www.astm.org/c1383-15.html)
-- **Free ACI 224R summary:** [Crack control — ACI overview](https://www.concrete.org/topicsinconcrete/topicdetail.aspx?topicid=22)
-- **Wikipedia:** [Concrete crack repair — Wikipedia](https://en.wikipedia.org/wiki/Concrete_crack_repair)""",
+**Find it online — search Google for:**
+- 🔍 
+- 🔍 
+- 🔍 
+- 🔍 
+- 🔍 """,
 
         "vebe": """**Vebe Test — ASTM C1170 (Stiff / Roller-Compacted Concrete)**
 
@@ -850,9 +900,11 @@ Pavement and RCC mixes are intentionally stiff (0" slump) for stability under co
 
 **Related test — ASTM C1228:** Modified Vebe for no-slump concrete.
 
-**Official standard:** ASTM C1170 — Free scope/abstract at [astm.org](https://www.astm.org/c1170-20.html) | Full text via SDSU library
-**Free RCC reference:** [ACI 325.10R — RCC Pavements (summary)](https://www.concrete.org/topicsinconcrete/topicdetail.aspx?topicid=43)
-**Wikipedia:** [Vebe consistometer — Wikipedia](https://en.wikipedia.org/wiki/Vebe_consistometer)
+**Find it online — search Google for:**
+- 🔍 
+- 🔍 
+- 🔍 
+- 🔍 
 
 **Related standards:**
 - **ACI 325.10R** — Guide for Construction of Roller-Compacted Concrete Pavements
@@ -975,7 +1027,7 @@ PCC particles (< 10 μm) fill the interstitial voids between larger cement grain
 
     # ── Clear chat ────────────────────────────────────────────────────────────
     if st.session_state.get("chat_history"):
-        st.divider()
+        st.markdown("<div style=height:3px;background:linear-gradient(to right,#0033A0,#FFB71B);border-radius:2px;margin:12px 0;></div>", unsafe_allow_html=True)
         col_clear, _ = st.columns([1, 4])
         with col_clear:
             if st.button("🗑️ Clear chat history", use_container_width=True):
