@@ -1,4 +1,4 @@
-# Concrete Mix Design Copilot
+# Concrete Mix Design Claude
 
 AI-assisted concrete mix proportioning based on **ACI 211.1**, powered by Claude (Anthropic).
 
