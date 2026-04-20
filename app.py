@@ -483,8 +483,9 @@ Always be encouraging and specific. Never give a generic list when a specific st
 
 **Key rule:** If the concrete shears or falls apart (shear slump), the test is not valid — resample and retest.
 
-**Official standard:** [ASTM C143](https://www.astm.org/c0143_c0143m-20.html) *(ASTM membership required for full text; preview available)*
-**Free ACI resource:** [ACI Concrete Terminology](https://www.concrete.org/store/productdetail.aspx?ItemID=SP1914)
+**Official standard:** ASTM C143 — [Read free scope & summary on ASTM.org](https://www.astm.org/c0143_c0143m-20.html)
+**Free reference:** [Portland Cement Association — Workability Overview](https://www.cement.org/learn/concrete-technology/concrete-design-production/workability)
+**Wikipedia overview:** [Concrete slump test — Wikipedia](https://en.wikipedia.org/wiki/Concrete_slump_test)
 
 **Related standards:**
 - **ASTM C172** — Sampling fresh concrete (required before C143)
@@ -517,7 +518,9 @@ Always be encouraging and specific. Never give a generic list when a specific st
 - Average of two cylinders must ≥ specified f'c
 - No individual cylinder < f'c − 500 psi (if f'c ≤ 5000 psi)
 
-**Official standard:** [ASTM C39](https://www.astm.org/c0039_c0039m-21.html) *(preview available)*
+**Official standard:** ASTM C39 — Free scope/abstract at [astm.org](https://www.astm.org/c0039_c0039m-21.html) | Full text via SDSU library
+**Free reference:** [PCA — Compressive Strength Testing](https://www.cement.org/learn/concrete-technology/concrete-construction/testing-and-quality)
+**Wikipedia overview:** [Compressive strength of concrete — Wikipedia](https://en.wikipedia.org/wiki/Compressive_strength_of_concrete)
 
 **Related standards:**
 - **ASTM C192** — Making and curing specimens in the lab
@@ -555,7 +558,9 @@ Always be encouraging and specific. Never give a generic list when a specific st
 
 **Important:** ASTM C231 is for **normal-weight** aggregate only. Use **ASTM C173** (volumetric method) for lightweight aggregate or slag aggregate.
 
-**Official standard:** [ASTM C231](https://www.astm.org/c0231_c0231m-22.html)
+**Official standard:** ASTM C231 — Free scope/abstract at [astm.org](https://www.astm.org/c0231_c0231m-22.html) | Full text via SDSU library
+**Free reference:** [PCA — Air Entrained Concrete](https://www.cement.org/learn/concrete-technology/durability/freeze-thaw-resistance)
+**Wikipedia overview:** [Air entrainment — Wikipedia](https://en.wikipedia.org/wiki/Air_entrainment)
 
 **Related standards:**
 - **ASTM C173** — Air content by volumetric method (lightweight aggregate)
@@ -669,7 +674,9 @@ w/cm = Water (lbs/CY) ÷ Total cementitious (lbs/CY)
 
 **Important:** RCPT measures electrical conductance, not chloride directly — high SCM content can lower readings independently of actual permeability. Confirm with **ASTM C1556** (bulk diffusion) for SCM-rich mixes.
 
-**Official standard:** [ASTM C1202](https://www.astm.org/c1202-22.html)
+**Official standard:** ASTM C1202 — Free scope/abstract at [astm.org](https://www.astm.org/c1202-22.html) | Full text via SDSU library
+**Free FHWA reference:** [Chloride Permeability — FHWA](https://www.fhwa.dot.gov/infrastructure/materialsgrp/chloride.cfm)
+**Wikipedia overview:** [Rapid chloride permeability test — Wikipedia](https://en.wikipedia.org/wiki/Rapid_chloride_permeability_test)
 
 **Related standards:**
 - **ASTM C1556** — Bulk diffusion test (more accurate for SCM mixes)
@@ -713,8 +720,10 @@ w/cm = Water (lbs/CY) ÷ Total cementitious (lbs/CY)
 **ACI reference:** ACI 237R-07 — Self-Consolidating Concrete
 
 **Official standards:**
-- [ASTM C1611](https://www.astm.org/c1611_c1611m-21.html) — Slump flow
-- [ASTM C1621](https://www.astm.org/c1621_c1621m-17.html) — J-Ring""",
+- ASTM C1611 — Free scope at [astm.org](https://www.astm.org/c1611_c1611m-21.html)
+- ASTM C1621 — Free scope at [astm.org](https://www.astm.org/c1621_c1621m-17.html)
+- **Free ACI guide:** [ACI 237R — Self-Consolidating Concrete (free download)](https://www.concrete.org/store/productdetail.aspx?ItemID=23710)
+- **Wikipedia:** [Self-consolidating concrete — Wikipedia](https://en.wikipedia.org/wiki/Self-consolidating_concrete)""",
 
         "uhpc": """**Ultra-High-Performance Concrete (UHPC) — Properties and Testing**
 
@@ -748,9 +757,9 @@ Concrete with compressive strength ≥ **14,500 psi (100 MPa)**, exceptional dur
 - Measures load vs mid-point deflection curve
 - Captures post-crack toughness — critical for UHPC
 
-**FHWA reference:** FHWA-HRT-14-084 — Ultra-High Performance Concrete: A State-of-the-Art Report
-**ACI reference:** ACI 239R (in development)
-**French standard:** NF P18-470 (most mature UHPC standard globally)
+**Free FHWA report:** [FHWA-HRT-14-084 — UHPC State-of-the-Art (free PDF)](https://www.fhwa.dot.gov/publications/research/infrastructure/structures/hpc/14084/14084.pdf)
+**Wikipedia:** [Ultra-high-performance concrete — Wikipedia](https://en.wikipedia.org/wiki/Ultra-high-performance_concrete)
+**ACI reference:** ACI 239R (in development — check concrete.org for latest)
 
 **Curing:** UHPC typically requires **steam curing at 194°F (90°C) for 48 hours** to achieve full strength.
 
@@ -800,10 +809,10 @@ Concrete with compressive strength ≥ **14,500 psi (100 MPa)**, exceptional dur
 | > 0.020" | Severe — structural concern |
 
 **Related standards:**
-- **ACI 224R** — Control of cracking
-- **ASTM C597** — UPV
-- **ASTM C1383** — Impact-echo
-- **ACI 364.1R** — Guide for evaluation of concrete structures""",
+- ASTM C597 — Free scope at [astm.org](https://www.astm.org/c0597-16.html)
+- ASTM C1383 — Free scope at [astm.org](https://www.astm.org/c1383-15.html)
+- **Free ACI 224R summary:** [Crack control — ACI overview](https://www.concrete.org/topicsinconcrete/topicdetail.aspx?topicid=22)
+- **Wikipedia:** [Concrete crack repair — Wikipedia](https://en.wikipedia.org/wiki/Concrete_crack_repair)""",
 
         "vebe": """**Vebe Test — ASTM C1170 (Stiff / Roller-Compacted Concrete)**
 
@@ -841,7 +850,9 @@ Pavement and RCC mixes are intentionally stiff (0" slump) for stability under co
 
 **Related test — ASTM C1228:** Modified Vebe for no-slump concrete.
 
-**Official standard:** [ASTM C1170](https://www.astm.org/c1170-20.html)
+**Official standard:** ASTM C1170 — Free scope/abstract at [astm.org](https://www.astm.org/c1170-20.html) | Full text via SDSU library
+**Free RCC reference:** [ACI 325.10R — RCC Pavements (summary)](https://www.concrete.org/topicsinconcrete/topicdetail.aspx?topicid=43)
+**Wikipedia:** [Vebe consistometer — Wikipedia](https://en.wikipedia.org/wiki/Vebe_consistometer)
 
 **Related standards:**
 - **ACI 325.10R** — Guide for Construction of Roller-Compacted Concrete Pavements
