@@ -46,7 +46,9 @@ st.divider()
 st.subheader("What would you like to do?")
 mode = st.radio(
     "Select a mode:",
-    ["🔬 Design a new mix (ACI 211.1)", "📄 Review an existing mix design (upload PDF or image)"],
+    ["🔬 Design a new mix (ACI 211.1)",
+     "📄 Review an existing mix design (upload PDF or image)",
+     "💬 Ask a concrete question (student Q&A)"],
     horizontal=True,
 )
 st.divider()
@@ -340,3 +342,219 @@ else:
             mime="application/pdf",
             use_container_width=True,
         )
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MODE C: STUDENT CONCRETE Q&A CHATBOX
+# ─────────────────────────────────────────────────────────────────────────────
+if "Q&A" in mode:
+    st.subheader("💬 Concrete Q&A — Ask anything about concrete")
+    st.caption(
+        "Ask about concrete properties, mix design theory, ASTM/ACI standards, "
+        "test methods, durability, admixtures, SCMs, or anything related to concrete materials. "
+        "This assistant is tuned for construction engineering students."
+    )
+
+    # Suggested questions as clickable buttons
+    st.markdown("**Quick questions to get started:**")
+    q_col1, q_col2, q_col3 = st.columns(3)
+    suggestions = [
+        ("What is the ASTM standard for compressive strength testing?", q_col1),
+        ("What does w/cm ratio mean and why does it matter?", q_col2),
+        ("What is the difference between fly ash Class C and Class F?", q_col3),
+        ("How does air entrainment protect concrete from freeze-thaw?", q_col1),
+        ("What is the slump test and what ASTM standard governs it?", q_col2),
+        ("What is Precipitated Calcium Carbonate (PCC) as a cement replacement?", q_col3),
+    ]
+    for question, col in suggestions:
+        with col:
+            if st.button(question, use_container_width=True):
+                st.session_state.chat_input_prefill = question
+
+    st.divider()
+
+    # Initialize chat history
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
+
+    # System prompt — concrete engineering tutor
+    CONCRETE_SYSTEM = """You are a concrete materials engineering assistant and tutor at the Teymouri Research Lab, 
+South Dakota State University (SDSU). You help construction engineering students understand:
+
+- Concrete mix design theory (ACI 211.1, PCA method)
+- Concrete material properties: strength, durability, workability, permeability
+- ASTM and ACI standards for concrete testing (always cite the exact standard number)
+- Test methods: slump (C143), air content (C231), unit weight (C138), compressive strength (C39), 
+  chloride permeability (C1202), shrinkage (C157), freeze-thaw (C666), and others
+- Supplementary cementitious materials: fly ash (C618), slag (C989), silica fume (C1240), 
+  and PCC (Precipitated Calcium Carbonate) as an inert micro-filler
+- Admixtures: water reducers, air entrainers, accelerators, retarders (ASTM C494)
+- Exposure classes (ACI 318 Table 19.3): freeze-thaw F0-F3, sulfate S0-S3, water W0-W1, chloride C0-C2
+- Concrete durability: freeze-thaw resistance, sulfate attack, alkali-silica reaction, carbonation
+- Curing methods and their effect on strength development
+- Fresh and hardened concrete properties
+
+When citing standards, always give the full designation (e.g., ASTM C39, ACI 211.1, ACI 318-19).
+Keep answers clear and educational. Use examples when helpful. 
+If a student asks about PCC, explain it as an inert micro-filler (not a reactive binder) that improves 
+particle packing and can provide 5-9% compressive strength gain at 3-8% replacement — this is active 
+research at the Teymouri Research Lab using PCC from Western Sugar Cooperative.
+Always be encouraging and supportive of students."""
+
+    # Display chat history
+    for msg in st.session_state.chat_history:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+
+    # Handle prefilled question from suggestion buttons
+    prefill = st.session_state.pop("chat_input_prefill", "")
+
+    # Chat input
+    user_input = st.chat_input("Ask a concrete question...", key="concrete_chat")
+
+    # Use prefilled question if button was clicked
+    active_input = prefill or user_input
+
+    if active_input:
+        # Show user message
+        st.session_state.chat_history.append({"role": "user", "content": active_input})
+        with st.chat_message("user"):
+            st.markdown(active_input)
+
+        # Get Claude response
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                if demo_mode:
+                    # Smart demo responses based on keywords
+                    q = active_input.lower()
+                    if "astm" in q or "standard" in q or "test" in q:
+                        response = (
+                            "**Key ASTM Standards for Concrete Testing:**\n\n"
+                            "- **ASTM C39** — Compressive strength of cylindrical specimens (most common test)\n"
+                            "- **ASTM C143** — Slump of hydraulic cement concrete (workability)\n"
+                            "- **ASTM C231** — Air content by pressure method (air-entrained concrete)\n"
+                            "- **ASTM C138** — Unit weight (density) and yield\n"
+                            "- **ASTM C1202** — Rapid chloride permeability (RCPT) — durability\n"
+                            "- **ASTM C666** — Freeze-thaw resistance (300 cycles)\n"
+                            "- **ASTM C157** — Length change / drying shrinkage\n"
+                            "- **ASTM C618** — Fly ash and natural pozzolans specification\n"
+                            "- **ASTM C989** — Slag cement specification\n"
+                            "- **ASTM C494** — Chemical admixtures (Types A–G)\n\n"
+                            "Which standard would you like to learn more about?"
+                        )
+                    elif "w/cm" in q or "water" in q and "cement" in q:
+                        response = (
+                            "**Water-to-Cementitious Material Ratio (w/cm)**\n\n"
+                            "The w/cm ratio is the single most important parameter in concrete mix design. "
+                            "It equals the mass of water divided by the mass of all cementitious materials "
+                            "(cement + fly ash + slag + silica fume + PCC).\n\n"
+                            "**Why it matters:**\n"
+                            "- Lower w/cm → higher strength, lower permeability, better durability\n"
+                            "- Higher w/cm → easier to place, but weaker and more permeable\n\n"
+                            "**ACI 318 durability limits:**\n"
+                            "- F2 (moderate freeze-thaw): max w/cm = 0.45\n"
+                            "- F3 (severe, deicers): max w/cm = 0.40\n"
+                            "- C2 (chloride exposure): max w/cm = 0.40\n\n"
+                            "A good rule of thumb: every 0.05 increase in w/cm reduces 28-day strength by ~10%."
+                        )
+                    elif "pcc" in q or "calcium carbonate" in q or "western sugar" in q:
+                        response = (
+                            "**Precipitated Calcium Carbonate (PCC) as a Cement Replacement**\n\n"
+                            "PCC is an inert micro-filler — unlike fly ash or slag, it does **not** react "
+                            "chemically with cement hydration products. It works through **physical** mechanisms:\n\n"
+                            "**Particle packing effect:** PCC particles fill voids between cement grains, "
+                            "reducing porosity and improving the microstructure.\n\n"
+                            "**Research at Teymouri Research Lab (SDSU):**\n"
+                            "- Optimal replacement: **3–8%** by mass of cementitious content\n"
+                            "- At 5% PCC: expect **+5–9% compressive strength gain** from packing\n"
+                            "- PCC source: Western Sugar Cooperative byproduct (Brookings, SD)\n"
+                            "- Does not contribute to early heat of hydration\n"
+                            "- No pozzolanic reaction — SG ≈ 2.71\n\n"
+                            "This is an active research area — results help reduce Portland cement demand sustainably."
+                        )
+                    elif "fly ash" in q or "class c" in q or "class f" in q:
+                        response = (
+                            "**Fly Ash in Concrete — Class C vs Class F (ASTM C618)**\n\n"
+                            "**Class F fly ash** (from burning anthracite/bituminous coal):\n"
+                            "- SiO₂ + Al₂O₃ + Fe₂O₃ > 70%\n"
+                            "- Pozzolanic only — reacts with Ca(OH)₂ from cement hydration\n"
+                            "- Slower strength gain, better long-term durability\n"
+                            "- Typical replacement: 15–25%\n\n"
+                            "**Class C fly ash** (from burning sub-bituminous/lignite coal):\n"
+                            "- SiO₂ + Al₂O₃ + Fe₂O₃ > 50%, high CaO content\n"
+                            "- Both pozzolanic AND cementitious (self-cementing)\n"
+                            "- Faster strength gain than Class F\n"
+                            "- More common in the Midwest (including South Dakota)\n\n"
+                            "Both reduce heat of hydration, improve workability, and enhance sulfate resistance."
+                        )
+                    elif "slump" in q:
+                        response = (
+                            "**Slump Test — ASTM C143**\n\n"
+                            "The slump test measures the **workability** (consistency) of fresh concrete.\n\n"
+                            "**Procedure:**\n"
+                            "1. Fill an Abrams cone (12\" tall) in 3 layers, rod each 25 times\n"
+                            "2. Lift the cone straight up in 5±2 seconds\n"
+                            "3. Measure the drop from the original height to the top of the concrete\n\n"
+                            "**Typical target slumps (ACI 211.1):**\n"
+                            "- Footings, walls: 1–3\"\n"
+                            "- Beams, columns: 1–4\"\n"
+                            "- Pavements, slabs: 1–3\"\n"
+                            "- Pumped concrete: 4–6\"\n\n"
+                            "**Important:** Test within 5 minutes of sampling, per ASTM C172."
+                        )
+                    elif "air" in q and ("entrain" in q or "freeze" in q):
+                        response = (
+                            "**Air Entrainment and Freeze-Thaw Protection**\n\n"
+                            "Air entrainment intentionally introduces tiny, uniformly distributed air bubbles "
+                            "(0.1–1 mm diameter) into concrete using an air-entraining admixture (ASTM C260).\n\n"
+                            "**How it protects against freeze-thaw (ACI 318 Table 19.3.3):**\n"
+                            "Water expands ~9% when it freezes. Entrained air bubbles act as **pressure relief "
+                            "valves** — water under freezing pressure flows into nearby air voids instead of "
+                            "cracking the paste.\n\n"
+                            "**Required air content (for 3/4\" max aggregate):**\n"
+                            "- F1 exposure: 5.0%\n"
+                            "- F2 exposure: 6.0%\n"
+                            "- F3 exposure (deicers): 6.0%\n\n"
+                            "**Key concept — spacing factor:** Air voids must be within 0.008\" (0.2 mm) "
+                            "of any point in the paste (ASTM C457 — air void analysis).\n\n"
+                            "Test with ASTM C231 (pressure method) for normal-weight concrete."
+                        )
+                    else:
+                        response = (
+                            "**DEMO MODE** — In live mode, Claude would answer your specific question in detail.\n\n"
+                            "Try one of the suggested questions above, or turn off Demo Mode and add your "
+                            "API key to get full AI-powered answers on any concrete topic including:\n"
+                            "- Specific ASTM/ACI standard lookups\n"
+                            "- Concrete property calculations\n"
+                            "- Mix design theory explanations\n"
+                            "- Admixture selection guidance\n"
+                            "- Durability and exposure class questions"
+                        )
+                else:
+                    api_key = os.getenv("ANTHROPIC_API_KEY", "")
+                    client  = anthropic.Anthropic(api_key=api_key)
+
+                    # Build messages from history
+                    messages = [
+                        {"role": m["role"], "content": m["content"]}
+                        for m in st.session_state.chat_history
+                    ]
+
+                    resp = client.messages.create(
+                        model="claude-opus-4-5",
+                        max_tokens=1000,
+                        system=CONCRETE_SYSTEM,
+                        messages=messages,
+                    )
+                    response = resp.content[0].text
+
+            st.markdown(response)
+            st.session_state.chat_history.append({"role": "assistant", "content": response})
+
+    # Clear chat button
+    if st.session_state.get("chat_history"):
+        st.divider()
+        col_clear, col_space = st.columns([1, 4])
+        with col_clear:
+            if st.button("🗑️ Clear chat history", use_container_width=True):
+                st.session_state.chat_history = []
+                st.rerun()
