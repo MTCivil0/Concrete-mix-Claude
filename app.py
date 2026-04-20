@@ -116,20 +116,49 @@ if "Review" in mode:
                 api_key = os.getenv("ANTHROPIC_API_KEY", "")
                 client  = anthropic.Anthropic(api_key=api_key)
 
+                REVIEW_PROMPT = f"""You are a concrete materials engineer reviewing a mix design sheet.
+Carefully read all values in this document/image and provide a structured review with these exact sections:
+
+## Mix Design Summary
+Extract and list all key values you can read: w/cm ratio, cement content, SCM types and %, water content, aggregate info, admixtures, density, target strength, casting date, mix ID.
+
+## ACI 211.1 & ACI 318 Compliance Check
+For each item, state PASS / WARN / FAIL:
+- w/cm ratio vs exposure class requirements
+- Minimum cementitious content
+- Air content (if shown)
+- Any other compliance items visible
+
+## Observed Materials
+List all materials with their quantities as shown in the document.
+
+## Durability Flags
+List any concerns about durability based on what you see.
+
+## Recommended QC Tests
+List appropriate ASTM tests for this mix.
+
+## Summary & Recommendations
+2-3 sentences of practical guidance.
+
+Additional context from user: {review_notes or 'None provided'}
+
+Be specific — extract actual numbers from the document, do not use placeholder values."""
+
                 if is_pdf:
                     content = [
                         {"type": "document", "source": {"type": "base64", "media_type": "application/pdf", "data": file_b64}},
-                        {"type": "text", "text": f"Review this concrete mix design document. Check ACI 211.1 and ACI 318 compliance, identify any durability concerns, flag w/cm against exposure requirements, and list recommended QC tests. Additional context: {review_notes or 'None'}"}
+                        {"type": "text", "text": REVIEW_PROMPT}
                     ]
                 else:
                     content = [
                         {"type": "image", "source": {"type": "base64", "media_type": media_type, "data": file_b64}},
-                        {"type": "text", "text": f"Review this concrete mix design document/image. Check ACI 211.1 and ACI 318 compliance, identify any durability concerns, flag w/cm against exposure requirements, and list recommended QC tests. Additional context: {review_notes or 'None'}"}
+                        {"type": "text", "text": REVIEW_PROMPT}
                     ]
 
                 msg = client.messages.create(
                     model="claude-opus-4-5",
-                    max_tokens=1500,
+                    max_tokens=2000,
                     messages=[{"role": "user", "content": content}],
                 )
                 review_text = msg.content[0].text
@@ -349,21 +378,23 @@ else:
 if "Q&A" in mode:
     st.subheader("💬 Concrete Q&A — Ask anything about concrete")
     st.caption(
-        "Ask about concrete properties, mix design theory, ASTM/ACI standards, "
-        "test methods, durability, admixtures, SCMs, or anything related to concrete materials. "
-        "This assistant is tuned for construction engineering students."
+        "Ask about concrete properties, ASTM/ACI test standards, mix design theory, "
+        "durability, admixtures, or SCMs. Tuned for construction engineering students."
     )
 
-    # Suggested questions as clickable buttons
+    # ── Suggested questions ───────────────────────────────────────────────────
     st.markdown("**Quick questions to get started:**")
     q_col1, q_col2, q_col3 = st.columns(3)
     suggestions = [
-        ("What is the ASTM standard for compressive strength testing?", q_col1),
-        ("What does w/cm ratio mean and why does it matter?", q_col2),
-        ("What is the difference between fly ash Class C and Class F?", q_col3),
-        ("How does air entrainment protect concrete from freeze-thaw?", q_col1),
-        ("What is the slump test and what ASTM standard governs it?", q_col2),
-        ("What is Precipitated Calcium Carbonate (PCC) as a cement replacement?", q_col3),
+        ("What is ASTM C143 — slump test?", q_col1),
+        ("What is ASTM C39 — compressive strength test?", q_col2),
+        ("What is ASTM C231 — air content test?", q_col3),
+        ("What is ASTM C1202 — RCPT test?", q_col1),
+        ("What are SCC tests and standards?", q_col2),
+        ("What is UHPC and how is it tested?", q_col3),
+        ("How is crack detection done in concrete?", q_col1),
+        ("What is the Vebe test for pavement concrete?", q_col2),
+        ("What is fly ash Class C vs Class F?", q_col3),
     ]
     for question, col in suggestions:
         with col:
@@ -372,176 +403,557 @@ if "Q&A" in mode:
 
     st.divider()
 
-    # Initialize chat history
+    # ── Chat history init ─────────────────────────────────────────────────────
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
 
-    # System prompt — concrete engineering tutor
+    # ── System prompt ─────────────────────────────────────────────────────────
     CONCRETE_SYSTEM = """You are a concrete materials engineering assistant and tutor at the Teymouri Research Lab, 
-South Dakota State University (SDSU). You help construction engineering students understand:
+South Dakota State University (SDSU). You help construction engineering students.
 
-- Concrete mix design theory (ACI 211.1, PCA method)
-- Concrete material properties: strength, durability, workability, permeability
-- ASTM and ACI standards for concrete testing (always cite the exact standard number)
-- Test methods: slump (C143), air content (C231), unit weight (C138), compressive strength (C39), 
-  chloride permeability (C1202), shrinkage (C157), freeze-thaw (C666), and others
-- Supplementary cementitious materials: fly ash (C618), slag (C989), silica fume (C1240), 
-  and PCC (Precipitated Calcium Carbonate) as an inert micro-filler
-- Admixtures: water reducers, air entrainers, accelerators, retarders (ASTM C494)
-- Exposure classes (ACI 318 Table 19.3): freeze-thaw F0-F3, sulfate S0-S3, water W0-W1, chloride C0-C2
-- Concrete durability: freeze-thaw resistance, sulfate attack, alkali-silica reaction, carbonation
-- Curing methods and their effect on strength development
-- Fresh and hardened concrete properties
+When a student asks about a specific ASTM or ACI standard or test method, ALWAYS structure your answer as:
 
-When citing standards, always give the full designation (e.g., ASTM C39, ACI 211.1, ACI 318-19).
-Keep answers clear and educational. Use examples when helpful. 
-If a student asks about PCC, explain it as an inert micro-filler (not a reactive binder) that improves 
-particle packing and can provide 5-9% compressive strength gain at 3-8% replacement — this is active 
-research at the Teymouri Research Lab using PCC from Western Sugar Cooperative.
-Always be encouraging and supportive of students."""
+1. **Standard:** Full designation (e.g., ASTM C143-20)
+2. **Purpose:** One sentence on what it measures
+3. **Equipment:** List the required equipment
+4. **Step-by-step procedure:** Numbered steps, concise and clear
+5. **Key acceptance criteria / limits**
+6. **Official link:** https://www.astm.org/Standards/[standard].htm — note it requires ASTM membership, but the free preview is available
+7. **Related standards:** 2-3 related standards
 
-    # Display chat history
+For non-standard questions, give clear educational answers with examples.
+
+Key standards to know:
+- ASTM C143 — Slump test (workability)
+- ASTM C39 — Compressive strength of cylinders  
+- ASTM C231 — Air content (pressure method)
+- ASTM C138 — Unit weight and yield
+- ASTM C1202 — Rapid chloride permeability (RCPT)
+- ASTM C666 — Freeze-thaw resistance
+- ASTM C157 — Drying shrinkage
+- ASTM C618 — Fly ash specification
+- ASTM C989 — Slag specification
+- ASTM C1240 — Silica fume specification
+- ASTM C494 — Chemical admixtures
+- ASTM C172 — Sampling fresh concrete
+- ASTM C192 — Making and curing test specimens
+- ASTM C138 — Density, yield, air content (gravimetric)
+- ACI 211.1 — Mix design (PCA method)
+- ACI 318 — Building code (exposure classes Table 19.3)
+
+PCC research context: Precipitated Calcium Carbonate from Western Sugar Cooperative is studied 
+at Teymouri Research Lab as an inert micro-filler (3-8% optimal, +5-9% strength from packing).
+
+Always be encouraging and specific. Never give a generic list when a specific standard was asked."""
+
+    # ── Demo responses — one per standard, focused and complete ──────────────
+    DEMO_RESPONSES = {
+        "c143": """**ASTM C143 — Standard Test Method for Slump of Hydraulic-Cement Concrete**
+
+**Purpose:** Measures the workability (consistency) of fresh concrete before placement.
+
+**Equipment required:**
+- Abrams slump cone: 4\" top diameter, 8\" base diameter, 12\" height
+- Tamping rod: 5/8\" diameter, 24\" long, bullet-tipped
+- Rigid, non-absorbent base plate
+- Measuring tape or ruler (to nearest 1/4\")
+- Stopwatch
+
+**Step-by-step procedure:**
+1. Dampen the cone and base plate — place cone on base, stand on foot pieces
+2. Sample fresh concrete per **ASTM C172** within 5 minutes of sampling
+3. Fill cone in **3 equal layers** (~4\" each)
+4. Rod each layer **25 times** uniformly over the cross-section; rod the bottom layer throughout, for upper layers penetrate 1\" into the previous layer
+5. Strike off the top flush with the cone opening
+6. Remove the cone by lifting **straight up in 5 ± 2 seconds** — no twisting
+7. Place the cone beside the slumped concrete
+8. Measure the difference between the top of the cone and the displaced center of the concrete
+9. Record to the nearest **1/4 inch (5 mm)**
+10. Complete entire test within **2.5 minutes** of sampling
+
+**Acceptance criteria (ACI 211.1 typical targets):**
+| Construction type | Typical slump |
+|---|---|
+| Footings & substructure walls | 1–3\" |
+| Beams & reinforced walls | 1–4\" |
+| Building columns | 1–4\" |
+| Pavements & slabs | 1–3\" |
+| Mass concrete | 1–2\" |
+| Pumped concrete | 4–6\" |
+
+**Key rule:** If the concrete shears or falls apart (shear slump), the test is not valid — resample and retest.
+
+**Official standard:** [ASTM C143](https://www.astm.org/c0143_c0143m-20.html) *(ASTM membership required for full text; preview available)*
+**Free ACI resource:** [ACI Concrete Terminology](https://www.concrete.org/store/productdetail.aspx?ItemID=SP1914)
+
+**Related standards:**
+- **ASTM C172** — Sampling fresh concrete (required before C143)
+- **ASTM C138** — Unit weight and yield
+- **ASTM C231** — Air content""",
+
+        "c39": """**ASTM C39 — Standard Test Method for Compressive Strength of Cylindrical Concrete Specimens**
+
+**Purpose:** Measures the compressive strength (f'c) of hardened concrete — the most fundamental concrete test.
+
+**Equipment required:**
+- Compression testing machine (calibrated per ASTM E4)
+- Standard cylinders: 4×8\" or 6×12\" (diameter × height ratio must be 2:1)
+- Capping compound or neoprene pads (ASTM C1231) for end preparation
+- Curing tank or moist room (73±3°F)
+
+**Step-by-step procedure:**
+1. Make specimens per **ASTM C192** — fill cylinder molds in 2 layers (4×8\") or 3 layers (6×12\"), rod each 25 times
+2. Cure in molds at 60–80°F for **24±8 hours**
+3. Strip molds and transport to lab; cure in water or moist room at **73±3°F (23±1.7°C)**
+4. Test at specified age — typically **7 days** (verify early strength) and **28 days** (acceptance)
+5. Cap or grind cylinder ends so they are flat within 0.002\"
+6. Center specimen in testing machine
+7. Apply load continuously at **35 ± 7 psi/second** (no jolts or shocks)
+8. Record maximum load at failure
+9. Calculate: **f'c = Load (lbs) ÷ Area (in²)**
+10. Note the fracture type (Type 1–6 per C39 Figure 3)
+
+**Acceptance (ACI 318):**
+- Average of two cylinders must ≥ specified f'c
+- No individual cylinder < f'c − 500 psi (if f'c ≤ 5000 psi)
+
+**Official standard:** [ASTM C39](https://www.astm.org/c0039_c0039m-21.html) *(preview available)*
+
+**Related standards:**
+- **ASTM C192** — Making and curing specimens in the lab
+- **ASTM C31** — Making and curing specimens in the field
+- **ASTM C1231** — Neoprene pad capping systems""",
+
+        "c231": """**ASTM C231 — Standard Test Method for Air Content of Freshly Mixed Concrete by the Pressure Method**
+
+**Purpose:** Measures the total air content (%) of fresh concrete using Boyle's Law — most common method for normal-weight aggregate concrete.
+
+**Equipment required:**
+- Type A or Type B pressure meter (air meter)
+- Tamping rod, vibrator, or both
+- Strike-off bar
+- Rubber mallet
+
+**Step-by-step procedure:**
+1. Sample fresh concrete per **ASTM C172**
+2. Dampen the base of the air meter
+3. Fill the bowl in **3 equal layers**, rod each **25 times** + tap sides 10–15 times with mallet; or vibrate per standard
+4. Strike off the top flush
+5. Clean the flange and clamp the cover assembly tightly
+6. Close air valves; inject water through petcocks to remove air from space above concrete
+7. Close petcocks; pump air to initial pressure (pre-charge)
+8. Tap sides of bowl; open main valve and read the gauge after pointer stabilizes
+9. Record air content to the nearest **0.1%**
+10. **Aggregate correction factor:** Subtract the aggregate correction factor (determined separately per Annex A2)
+
+**Typical target air content (ACI 318, 3/4\" max aggregate):**
+| Exposure | Required air % |
+|---|---|
+| F1 — moderate freeze-thaw | 5.0% |
+| F2 — severe freeze-thaw | 6.0% |
+| F3 — deicers | 6.0% |
+
+**Important:** ASTM C231 is for **normal-weight** aggregate only. Use **ASTM C173** (volumetric method) for lightweight aggregate or slag aggregate.
+
+**Official standard:** [ASTM C231](https://www.astm.org/c0231_c0231m-22.html)
+
+**Related standards:**
+- **ASTM C173** — Air content by volumetric method (lightweight aggregate)
+- **ASTM C138** — Unit weight (can also estimate air gravimetrically)
+- **ASTM C457** — Microscopical determination of air-void parameters (hardened concrete)""",
+
+        "wcm": """**Water-to-Cementitious Material Ratio (w/cm)**
+
+**Definition:**
+> w/cm = Mass of water ÷ Mass of all cementitious materials
+
+Cementitious materials include: Portland cement + fly ash + slag + silica fume + PCC (if reactive)
+Note: PCC (Precipitated Calcium Carbonate) is an **inert filler** — it is typically excluded from w/cm denominator.
+
+**Why it's the most important parameter in mix design:**
+- Controls **capillary porosity** in the hardened cement paste
+- Lower w/cm → denser microstructure → higher strength + lower permeability
+- Every 0.05 increase in w/cm ≈ 10% reduction in 28-day strength
+
+**ACI 318-19 maximum w/cm by exposure class:**
+| Exposure | Max w/cm | Min f'c |
+|---|---|---|
+| F1 (moderate freeze-thaw) | 0.55 | 3,500 psi |
+| F2 (severe freeze-thaw) | 0.45 | 4,500 psi |
+| F3 (deicers) | 0.40 | 5,000 psi |
+| W1 (watertight) | 0.50 | 4,000 psi |
+| S2 (severe sulfate) | 0.45 | 4,500 psi |
+| C2 (chlorides/deicers) | 0.40 | 5,000 psi |
+
+**ACI 211.1 guidance (Table 6.3.4):**
+| Target f'c (psi) | Non-air-entrained w/cm | Air-entrained w/cm |
+|---|---|---|
+| 5,000 | 0.48 | 0.40 |
+| 4,000 | 0.57 | 0.48 |
+| 3,000 | 0.68 | 0.59 |
+
+**Key formula check in this tool:**
+w/cm = Water (lbs/CY) ÷ Total cementitious (lbs/CY)
+
+**Reference:** ACI 211.1, ACI 318-19 Table 19.3.3.1""",
+
+        "fly ash": """**Fly Ash in Concrete — ASTM C618**
+
+**What is fly ash?** A fine powder byproduct from burning coal in power plants. Captured by electrostatic precipitators. Used as a partial cement replacement in concrete.
+
+**Class F vs Class C — Key differences:**
+
+| Property | Class F | Class C |
+|---|---|---|
+| Coal source | Anthracite / bituminous | Sub-bituminous / lignite |
+| SiO₂+Al₂O₃+Fe₂O₃ | > 70% | > 50% |
+| CaO content | Low (< 10%) | High (15–35%) |
+| Reactivity | Pozzolanic only | Pozzolanic + cementitious |
+| Self-cementing | No | Yes |
+| Strength gain | Slower (long-term gain) | Faster |
+| Heat of hydration | Lower | Moderate |
+| Sulfate resistance | Better | Good |
+| Midwest availability | Less common | **Very common in SD** |
+
+**Typical replacement levels:**
+- Class F: 15–25% by mass of cementitious
+- Class C: 20–35% by mass of cementitious
+
+**Benefits of fly ash:**
+- Reduces heat of hydration (good for mass concrete)
+- Improves workability and pumpability
+- Enhances long-term durability
+- Reduces cost compared to Portland cement
+- Reduces CO₂ footprint
+
+**ASTM C618 key requirements:**
+- Fineness: ≤ 34% retained on No. 325 sieve
+- Strength activity index: ≥ 75% at 28 days
+- Soundness: autoclave expansion ≤ 0.8%
+
+**Official standard:** [ASTM C618](https://www.astm.org/c0618-22.html)
+
+**Related:** ASTM C989 (slag), ASTM C1240 (silica fume), ACI 232.2R (fly ash in concrete)""",
+
+
+        "rcpt": """**ASTM C1202 — Rapid Chloride Permeability Test (RCPT)**
+
+**Purpose:** Measures the electrical conductance of concrete to assess its resistance to chloride ion penetration — key durability indicator for bridge decks, marine structures, and any concrete exposed to deicers or seawater.
+
+**Equipment required:**
+- Two copper electrode cells with rubber gaskets
+- DC power supply (60 V)
+- Ammeter (data logger preferred)
+- Vacuum pump and desiccator
+- Water-saturated specimens (4" dia × 2" thick discs)
+
+**Step-by-step procedure:**
+1. Cut a 2" thick disc from a 4×8" cylinder (at mid-height) using a wet saw
+2. Condition the disc: vacuum saturate in water for 18 hours per Annex A
+3. Mount disc between two cells: one filled with 3% NaCl, one with 0.3N NaOH
+4. Apply **60 V DC** across the specimen for **6 hours**
+5. Record current every 30 minutes using data logger
+6. Calculate total charge passed (coulombs) = area under current-time curve
+
+**Acceptance criteria (ASTM C1202 Table 1):**
+| Charge passed (Coulombs) | Chloride permeability |
+|---|---|
+| > 4,000 | High |
+| 2,000 – 4,000 | Moderate |
+| 1,000 – 2,000 | Low |
+| 100 – 1,000 | Very low |
+| < 100 | Negligible |
+
+**ACI 318 / AASHTO target:** ≤ 2,000 coulombs for bridge decks; ≤ 1,000 for severe exposure.
+**Test age:** Typically at **28 or 56 days** (56 days preferred for SCM mixes — slag/fly ash need time to react).
+
+**Important:** RCPT measures electrical conductance, not chloride directly — high SCM content can lower readings independently of actual permeability. Confirm with **ASTM C1556** (bulk diffusion) for SCM-rich mixes.
+
+**Official standard:** [ASTM C1202](https://www.astm.org/c1202-22.html)
+
+**Related standards:**
+- **ASTM C1556** — Bulk diffusion test (more accurate for SCM mixes)
+- **AASHTO T 277** — Equivalent to ASTM C1202
+- **ASTM C642** — Absorption and voids in hardened concrete""",
+
+        "scc": """**Self-Consolidating Concrete (SCC) — Key Tests and Standards**
+
+**What is SCC?** Concrete that flows under its own weight, fills formwork completely, and passes through reinforcement without vibration. Requires specific fresh property tests — slump alone is insufficient.
+
+**The 4 essential SCC fresh property tests:**
+
+**1. ASTM C1611 — Slump Flow and T50**
+- Pour concrete into inverted slump cone on flat plate; lift cone; measure spread diameter
+- **Target:** 18–32" (450–810 mm) spread
+- **T50:** Time to reach 20" diameter — measures viscosity
+- **Target T50:** 2–7 seconds (longer = more viscous = more stable)
+- Also assess **VSI (Visual Stability Index):** 0 = stable, 1 = stable, 2 = unstable, 3 = highly unstable
+
+**2. ASTM C1621 — J-Ring Test (passing ability)**
+- Same as slump flow but with a ring of vertical rebar around the cone
+- Measure spread WITH the ring; compare to free slump flow
+- **Acceptable difference:** ≤ 2" (50 mm) → good passing ability
+- Larger difference = blockage risk in congested reinforcement
+
+**3. ASTM C1610 — Column Segregation Test**
+- Fill a 26" tall PVC column in one lift; let stand 15 minutes; section into 4 parts
+- Compare aggregate content top vs bottom
+- **Segregation index:** ≤ 10% acceptable; > 15% = segregation concern
+
+**4. ASTM C1712 — Rapid Assessment of SCC (Penetration Test)**
+- Simple site test: measure depth a standard cylinder penetrates fresh SCC
+- Quick field check for stability and viscosity
+
+**Typical SCC mix characteristics:**
+- w/cm: 0.32–0.42
+- High paste volume: 34–40%
+- VMA (viscosity-modifying admixture) often used
+- HRWRA (high-range water reducer, ASTM C494 Type F or G) required
+
+**ACI reference:** ACI 237R-07 — Self-Consolidating Concrete
+
+**Official standards:**
+- [ASTM C1611](https://www.astm.org/c1611_c1611m-21.html) — Slump flow
+- [ASTM C1621](https://www.astm.org/c1621_c1621m-17.html) — J-Ring""",
+
+        "uhpc": """**Ultra-High-Performance Concrete (UHPC) — Properties and Testing**
+
+**What is UHPC?**
+Concrete with compressive strength ≥ **14,500 psi (100 MPa)**, exceptional durability, and high tensile strength from steel fiber reinforcement. No coarse aggregate — uses quartz sand, silica fume, HRWRA, and steel fibers.
+
+**Typical UHPC mix composition:**
+| Material | Typical content |
+|---|---|
+| Portland cement (Type I/II or III) | 700–900 lb/CY |
+| Silica fume | 200–250 lb/CY (25–30%) |
+| Quartz flour (< 300 μm) | 200–400 lb/CY |
+| Quartz sand (150–600 μm) | 900–1100 lb/CY |
+| Steel fibers (2% by volume) | 260 lb/CY |
+| HRWRA | 30–50 lb/CY |
+| w/cm | 0.14–0.22 |
+
+**Key UHPC test standards:**
+
+| Test | Standard | UHPC typical value |
+|---|---|---|
+| Compressive strength | ASTM C39 | 14,500–29,000 psi |
+| Flexural strength | ASTM C1609 | 2,000–4,000 psi |
+| Splitting tensile | ASTM C496 | 1,000–2,500 psi |
+| Flow (fresh) | ASTM C1437 | > 8" spread |
+| Chloride permeability | ASTM C1202 | < 100 coulombs (negligible) |
+| Absorption | ASTM C642 | < 2% |
+
+**ASTM C1609 — Flexural Performance of Fiber-Reinforced Concrete:**
+- Uses 6×6×20" beam on 18" span
+- Measures load vs mid-point deflection curve
+- Captures post-crack toughness — critical for UHPC
+
+**FHWA reference:** FHWA-HRT-14-084 — Ultra-High Performance Concrete: A State-of-the-Art Report
+**ACI reference:** ACI 239R (in development)
+**French standard:** NF P18-470 (most mature UHPC standard globally)
+
+**Curing:** UHPC typically requires **steam curing at 194°F (90°C) for 48 hours** to achieve full strength.
+
+**Related:** ASTM C1437 (flow of hydraulic cement mortar), ASTM C1609 (fiber-reinforced concrete)""",
+
+        "crack": """**Crack Detection in Concrete — Methods and Standards**
+
+**Why it matters:** Cracks are the primary pathway for chloride, water, and sulfate ingress — directly affecting durability and service life.
+
+**Visual inspection (first step — always):**
+- Crack width measured with a **crack comparator gauge** (optical)
+- Map crack patterns: map, pattern/shrinkage, structural flexural, corrosion-induced
+- **ACI 224R** — Control of Cracking in Concrete Structures (key reference)
+- Acceptable crack width limits (ACI 318): 0.013" (0.33 mm) for exterior exposure
+
+**Non-destructive testing (NDT) methods:**
+
+**1. Ultrasonic Pulse Velocity (UPV) — ASTM C597**
+- Transmit ultrasonic pulse through concrete; measure travel time
+- Lower velocity = higher porosity / cracking
+- Crack depth estimated by indirect transmission method
+- Typical sound concrete: > 14,000 ft/s (4,300 m/s)
+
+**2. Impact-Echo — ASTM C1383**
+- Strike surface with small hammer; measure reflected stress wave frequency
+- Detects delamination, voids, and internal cracks
+- Best for slabs and walls — non-invasive
+
+**3. Ground Penetrating Radar (GPR) — ASTM D6432**
+- Electromagnetic pulse maps internal features including cracks, rebar, voids
+- Fast scanning method for bridge decks and pavements
+
+**4. Acoustic Emission (AE) — ASTM E1316**
+- Passive sensors detect stress waves from active crack propagation
+- Used for real-time monitoring of structural elements
+
+**5. Dye penetrant / fluorescent crack mapping**
+- Apply dye or epoxy; UV light reveals crack network
+- Used in lab specimens and cores
+
+**Crack width classification (ACI 224R):**
+| Width | Classification |
+|---|---|
+| < 0.006" (0.15 mm) | Hairline — monitor |
+| 0.006–0.013" | Fine — acceptable outdoors |
+| > 0.013" | Wide — investigate cause |
+| > 0.020" | Severe — structural concern |
+
+**Related standards:**
+- **ACI 224R** — Control of cracking
+- **ASTM C597** — UPV
+- **ASTM C1383** — Impact-echo
+- **ACI 364.1R** — Guide for evaluation of concrete structures""",
+
+        "vebe": """**Vebe Test — ASTM C1170 (Stiff / Roller-Compacted Concrete)**
+
+**Purpose:** Measures the consistency (workability) of **very stiff concrete** — used for roller-compacted concrete (RCC) pavements, no-slump mixes, and dry-cast concrete where the slump test gives 0" and is therefore meaningless.
+
+**Why not slump for pavement concrete?**
+Pavement and RCC mixes are intentionally stiff (0" slump) for stability under compaction. Slump cannot differentiate between these mixes — Vebe time fills this gap.
+
+**Equipment required:**
+- Vibrating table (frequency: 50 Hz, amplitude: 0.35 mm)
+- Slump cone (standard Abrams cone)
+- Plexiglass disc rider (to detect completion)
+- Stopwatch
+- Container (cylindrical, 9.5" dia × 8" height)
+
+**Step-by-step procedure (ASTM C1170):**
+1. Place slump cone centered inside the cylindrical container on the vibrating table
+2. Fill cone in 3 layers, rod each 25 times (same as slump test)
+3. Strike off top and remove slump cone
+4. Place transparent Plexiglass disc on top of the concrete
+5. Start vibrator and stopwatch simultaneously
+6. Stop when the concrete has fully compacted and the disc is uniformly covered on its entire underside with mortar (no more air bubbles escaping)
+7. Record time to nearest **0.5 second** = **Vebe time**
+
+**Interpretation:**
+| Vebe time (seconds) | Workability class | Typical use |
+|---|---|---|
+| 3–5 s | V0 — very workable | Wet RCC |
+| 6–12 s | V1 — workable | Standard RCC pavement |
+| 12–20 s | V2 — stiff | Dry RCC, lean concrete base |
+| 20–30 s | V3 — very stiff | No-fines, stiff pavement |
+| > 30 s | V4 — extremely stiff | Prestressed dry-cast |
+
+**RCC pavement target:** Typically **6–12 seconds** (V1 class) for optimal compaction with vibratory roller.
+
+**Related test — ASTM C1228:** Modified Vebe for no-slump concrete.
+
+**Official standard:** [ASTM C1170](https://www.astm.org/c1170-20.html)
+
+**Related standards:**
+- **ACI 325.10R** — Guide for Construction of Roller-Compacted Concrete Pavements
+- **ASTM C1435** — Molding roller-compacted concrete in cylinder molds
+- **ASTM C1040** — Density of unhardened and hardened concrete by nuclear methods""",
+        "pcc": """**Precipitated Calcium Carbonate (PCC) as a Cement Replacement**
+
+**What is PCC?**
+Precipitated Calcium Carbonate (CaCO₃) is a manufactured, ultra-fine limestone powder produced by a controlled chemical precipitation process. At SDSU, our source is a **byproduct from Western Sugar Cooperative** in Brookings, SD.
+
+**Key distinction — inert micro-filler (NOT a reactive binder):**
+Unlike fly ash, slag, or silica fume, PCC does **not** react chemically with cement hydration products. It has **no pozzolanic activity**.
+
+**How it works — particle packing effect:**
+PCC particles (< 10 μm) fill the interstitial voids between larger cement grains, improving the packing density of the cementitious system. This reduces capillary porosity without chemical reaction.
+
+**Research findings — Teymouri Research Lab (SDSU):**
+| PCC replacement | Expected effect |
+|---|---|
+| 3–5% | Optimal packing — +5 to +9% compressive strength gain |
+| 5–8% | Good range — monitor workability |
+| > 8% | Diminishing returns — may reduce strength |
+| > 15% | Likely strength reduction |
+
+**Properties of Western Sugar PCC:**
+- Specific gravity: ~2.71
+- Particle size: < 10 μm (finer than cement)
+- Color: Bright white
+- No pozzolanic reactivity
+- Does not contribute to heat of hydration
+- Chemically inert in concrete environment
+
+**Mix design note:** In this tool, PCC% is applied as a mass replacement of the cementitious content. Since PCC is inert, the effective w/cm uses only the reactive cementitious materials.
+
+**Related research area:** Sustainable concrete — reducing Portland cement demand using industrial byproducts.
+
+**ACI guidance:** ACI 211.1 does not explicitly address inert fillers — engineering judgment required.
+
+**Related:** ASTM C1797 (limestone filler), EN 197-1 (Portland-limestone cement, European standard)"""
+    }
+
+    def get_demo_response(question: str) -> str:
+        q = question.lower()
+        # Specific standard checks FIRST — most specific wins
+        if "c1202" in q or "rcpt" in q or "rapid chloride" in q or "chloride perm" in q:
+            return DEMO_RESPONSES["rcpt"]
+        elif "scc" in q or "self-consolidat" in q or "self consolidat" in q or "j-ring" in q or "slump flow" in q:
+            return DEMO_RESPONSES["scc"]
+        elif "uhpc" in q or "ultra-high" in q or "ultra high" in q:
+            return DEMO_RESPONSES["uhpc"]
+        elif "crack" in q and ("detect" in q or "test" in q or "measur" in q or "done" in q):
+            return DEMO_RESPONSES["crack"]
+        elif "vebe" in q or ("pavement" in q and ("stiff" in q or "rcc" in q or "roller" in q or "test" in q)):
+            return DEMO_RESPONSES["vebe"]
+        elif "c143" in q or ("slump" in q and "vebe" not in q and "flow" not in q):
+            return DEMO_RESPONSES["c143"]
+        elif "c39" in q or "compressive" in q:
+            return DEMO_RESPONSES["c39"]
+        elif "c231" in q or "air content" in q or "air meter" in q:
+            return DEMO_RESPONSES["c231"]
+        elif "w/cm" in q or ("water" in q and "cement" in q and "ratio" in q):
+            return DEMO_RESPONSES["wcm"]
+        elif "pcc" in q or "calcium carbonate" in q or "western sugar" in q:
+            return DEMO_RESPONSES["pcc"]
+        elif "fly ash" in q or "class c" in q or "class f" in q:
+            return DEMO_RESPONSES["fly ash"]
+        else:
+            return (
+                "**Demo mode — specific answer not pre-loaded for this question.**\n\n"
+                "In **live mode** (toggle off Demo Mode + add API key), Claude will give you a full answer with:\n"
+                "- The exact ASTM/ACI standard number and edition\n"
+                "- Step-by-step test procedure\n"
+                "- Equipment list\n"
+                "- Acceptance criteria\n"
+                "- Official ASTM link\n"
+                "- Related standards\n\n"
+                "**Try one of these pre-loaded demo questions:**\n"
+                "- *What is ASTM C143 — slump test?*\n"
+                "- *What is ASTM C39 — compressive strength test?*\n"
+                "- *What is ASTM C231 — air content test?*\n"
+                "- *What does w/cm ratio mean?*\n"
+                "- *What is fly ash Class C vs Class F?*\n"
+                "- *What is PCC as a cement replacement?*"
+            )
+
+    # ── Display chat history ───────────────────────────────────────────────────
     for msg in st.session_state.chat_history:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-    # Handle prefilled question from suggestion buttons
+    # ── Handle prefill from buttons ───────────────────────────────────────────
     prefill = st.session_state.pop("chat_input_prefill", "")
-
-    # Chat input
-    user_input = st.chat_input("Ask a concrete question...", key="concrete_chat")
-
-    # Use prefilled question if button was clicked
+    user_input = st.chat_input("Ask a concrete question — e.g. 'What is ASTM C143?'", key="concrete_chat")
     active_input = prefill or user_input
 
     if active_input:
-        # Show user message
         st.session_state.chat_history.append({"role": "user", "content": active_input})
         with st.chat_message("user"):
             st.markdown(active_input)
 
-        # Get Claude response
         with st.chat_message("assistant"):
-            with st.spinner("Thinking..."):
+            with st.spinner("Looking that up..."):
                 if demo_mode:
-                    # Smart demo responses based on keywords
-                    q = active_input.lower()
-                    if "astm" in q or "standard" in q or "test" in q:
-                        response = (
-                            "**Key ASTM Standards for Concrete Testing:**\n\n"
-                            "- **ASTM C39** — Compressive strength of cylindrical specimens (most common test)\n"
-                            "- **ASTM C143** — Slump of hydraulic cement concrete (workability)\n"
-                            "- **ASTM C231** — Air content by pressure method (air-entrained concrete)\n"
-                            "- **ASTM C138** — Unit weight (density) and yield\n"
-                            "- **ASTM C1202** — Rapid chloride permeability (RCPT) — durability\n"
-                            "- **ASTM C666** — Freeze-thaw resistance (300 cycles)\n"
-                            "- **ASTM C157** — Length change / drying shrinkage\n"
-                            "- **ASTM C618** — Fly ash and natural pozzolans specification\n"
-                            "- **ASTM C989** — Slag cement specification\n"
-                            "- **ASTM C494** — Chemical admixtures (Types A–G)\n\n"
-                            "Which standard would you like to learn more about?"
-                        )
-                    elif "w/cm" in q or "water" in q and "cement" in q:
-                        response = (
-                            "**Water-to-Cementitious Material Ratio (w/cm)**\n\n"
-                            "The w/cm ratio is the single most important parameter in concrete mix design. "
-                            "It equals the mass of water divided by the mass of all cementitious materials "
-                            "(cement + fly ash + slag + silica fume + PCC).\n\n"
-                            "**Why it matters:**\n"
-                            "- Lower w/cm → higher strength, lower permeability, better durability\n"
-                            "- Higher w/cm → easier to place, but weaker and more permeable\n\n"
-                            "**ACI 318 durability limits:**\n"
-                            "- F2 (moderate freeze-thaw): max w/cm = 0.45\n"
-                            "- F3 (severe, deicers): max w/cm = 0.40\n"
-                            "- C2 (chloride exposure): max w/cm = 0.40\n\n"
-                            "A good rule of thumb: every 0.05 increase in w/cm reduces 28-day strength by ~10%."
-                        )
-                    elif "pcc" in q or "calcium carbonate" in q or "western sugar" in q:
-                        response = (
-                            "**Precipitated Calcium Carbonate (PCC) as a Cement Replacement**\n\n"
-                            "PCC is an inert micro-filler — unlike fly ash or slag, it does **not** react "
-                            "chemically with cement hydration products. It works through **physical** mechanisms:\n\n"
-                            "**Particle packing effect:** PCC particles fill voids between cement grains, "
-                            "reducing porosity and improving the microstructure.\n\n"
-                            "**Research at Teymouri Research Lab (SDSU):**\n"
-                            "- Optimal replacement: **3–8%** by mass of cementitious content\n"
-                            "- At 5% PCC: expect **+5–9% compressive strength gain** from packing\n"
-                            "- PCC source: Western Sugar Cooperative byproduct (Brookings, SD)\n"
-                            "- Does not contribute to early heat of hydration\n"
-                            "- No pozzolanic reaction — SG ≈ 2.71\n\n"
-                            "This is an active research area — results help reduce Portland cement demand sustainably."
-                        )
-                    elif "fly ash" in q or "class c" in q or "class f" in q:
-                        response = (
-                            "**Fly Ash in Concrete — Class C vs Class F (ASTM C618)**\n\n"
-                            "**Class F fly ash** (from burning anthracite/bituminous coal):\n"
-                            "- SiO₂ + Al₂O₃ + Fe₂O₃ > 70%\n"
-                            "- Pozzolanic only — reacts with Ca(OH)₂ from cement hydration\n"
-                            "- Slower strength gain, better long-term durability\n"
-                            "- Typical replacement: 15–25%\n\n"
-                            "**Class C fly ash** (from burning sub-bituminous/lignite coal):\n"
-                            "- SiO₂ + Al₂O₃ + Fe₂O₃ > 50%, high CaO content\n"
-                            "- Both pozzolanic AND cementitious (self-cementing)\n"
-                            "- Faster strength gain than Class F\n"
-                            "- More common in the Midwest (including South Dakota)\n\n"
-                            "Both reduce heat of hydration, improve workability, and enhance sulfate resistance."
-                        )
-                    elif "slump" in q:
-                        response = (
-                            "**Slump Test — ASTM C143**\n\n"
-                            "The slump test measures the **workability** (consistency) of fresh concrete.\n\n"
-                            "**Procedure:**\n"
-                            "1. Fill an Abrams cone (12\" tall) in 3 layers, rod each 25 times\n"
-                            "2. Lift the cone straight up in 5±2 seconds\n"
-                            "3. Measure the drop from the original height to the top of the concrete\n\n"
-                            "**Typical target slumps (ACI 211.1):**\n"
-                            "- Footings, walls: 1–3\"\n"
-                            "- Beams, columns: 1–4\"\n"
-                            "- Pavements, slabs: 1–3\"\n"
-                            "- Pumped concrete: 4–6\"\n\n"
-                            "**Important:** Test within 5 minutes of sampling, per ASTM C172."
-                        )
-                    elif "air" in q and ("entrain" in q or "freeze" in q):
-                        response = (
-                            "**Air Entrainment and Freeze-Thaw Protection**\n\n"
-                            "Air entrainment intentionally introduces tiny, uniformly distributed air bubbles "
-                            "(0.1–1 mm diameter) into concrete using an air-entraining admixture (ASTM C260).\n\n"
-                            "**How it protects against freeze-thaw (ACI 318 Table 19.3.3):**\n"
-                            "Water expands ~9% when it freezes. Entrained air bubbles act as **pressure relief "
-                            "valves** — water under freezing pressure flows into nearby air voids instead of "
-                            "cracking the paste.\n\n"
-                            "**Required air content (for 3/4\" max aggregate):**\n"
-                            "- F1 exposure: 5.0%\n"
-                            "- F2 exposure: 6.0%\n"
-                            "- F3 exposure (deicers): 6.0%\n\n"
-                            "**Key concept — spacing factor:** Air voids must be within 0.008\" (0.2 mm) "
-                            "of any point in the paste (ASTM C457 — air void analysis).\n\n"
-                            "Test with ASTM C231 (pressure method) for normal-weight concrete."
-                        )
-                    else:
-                        response = (
-                            "**DEMO MODE** — In live mode, Claude would answer your specific question in detail.\n\n"
-                            "Try one of the suggested questions above, or turn off Demo Mode and add your "
-                            "API key to get full AI-powered answers on any concrete topic including:\n"
-                            "- Specific ASTM/ACI standard lookups\n"
-                            "- Concrete property calculations\n"
-                            "- Mix design theory explanations\n"
-                            "- Admixture selection guidance\n"
-                            "- Durability and exposure class questions"
-                        )
+                    response = get_demo_response(active_input)
                 else:
                     api_key = os.getenv("ANTHROPIC_API_KEY", "")
                     client  = anthropic.Anthropic(api_key=api_key)
-
-                    # Build messages from history
-                    messages = [
-                        {"role": m["role"], "content": m["content"]}
-                        for m in st.session_state.chat_history
-                    ]
-
+                    messages = [{"role": m["role"], "content": m["content"]}
+                                for m in st.session_state.chat_history]
                     resp = client.messages.create(
                         model="claude-opus-4-5",
-                        max_tokens=1000,
+                        max_tokens=1500,
                         system=CONCRETE_SYSTEM,
                         messages=messages,
                     )
@@ -550,10 +962,10 @@ Always be encouraging and supportive of students."""
             st.markdown(response)
             st.session_state.chat_history.append({"role": "assistant", "content": response})
 
-    # Clear chat button
+    # ── Clear chat ────────────────────────────────────────────────────────────
     if st.session_state.get("chat_history"):
         st.divider()
-        col_clear, col_space = st.columns([1, 4])
+        col_clear, _ = st.columns([1, 4])
         with col_clear:
             if st.button("🗑️ Clear chat history", use_container_width=True):
                 st.session_state.chat_history = []
