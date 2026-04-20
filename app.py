@@ -70,45 +70,52 @@ st.markdown("""
 <div class="sdsu-gold-bar"></div>
 """, unsafe_allow_html=True)
 st.title("Concrete Mix Design Copilot")
-st.caption("ACI 211.1 proportioning + AI-assisted durability analysis and QC guidance")
-st.divider()
+st.caption("Teymouri Research Lab · SDSU · ACI 211.1")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# MODE SELECTION
+# MODE SELECTION — dropdown, nothing shown until user picks
 # ─────────────────────────────────────────────────────────────────────────────
-st.subheader("What would you like to do?")
-mode = st.radio(
-    "Select a mode:",
-    ["🔬 Design a new mix (ACI 211.1)",
-     "📄 Review an existing mix design (upload PDF or image)",
+mode = st.selectbox(
+    "What would you like to do?",
+    ["— select an option —",
+     "🔬 Design a new concrete mix (ACI 211.1)",
+     "📄 Review an existing mix design (upload file)",
      "💬 Ask a concrete question (student Q&A)"],
-    horizontal=True,
+    index=0,
 )
-st.divider()
 
-# ─────────────────────────────────────────────────────────────────────────────
-# PROJECT INFORMATION (shared by both modes)
-# ─────────────────────────────────────────────────────────────────────────────
-with st.expander("📋 Project information (optional — will appear in report)", expanded=True):
-    pi_col1, pi_col2 = st.columns(2)
-    with pi_col1:
-        proj_name    = st.text_input("Project name", placeholder="e.g. US-14 Bridge Deck Replacement")
-        location     = st.text_input("Location", placeholder="e.g. Brookings, SD")
-    with pi_col2:
-        prepared_by  = st.text_input("Prepared by", placeholder="e.g. Dr. Mohammad Teymouri, PE")
-        company      = st.text_input("Company / Institution", placeholder="e.g. SDSU Teymouri Research Lab")
-
-with st.expander("🏭 Material producers (optional — will appear in report)"):
-    mp_col1, mp_col2 = st.columns(2)
-    with mp_col1:
-        cement_prod = st.text_input("Cement producer", placeholder="e.g. Ash Grove Cement, Type I/II")
-        flyash_prod = st.text_input("Fly ash producer / class", placeholder="e.g. Basin Electric, Class F")
-        slag_prod   = st.text_input("Slag producer / grade", placeholder="e.g. Lafarge, Grade 100")
-    with mp_col2:
-        sf_prod     = st.text_input("Silica fume producer", placeholder="e.g. Elkem, densified")
-        pcc_prod    = st.text_input("PCC producer", placeholder="e.g. Western Sugar Cooperative, Brookings SD")
+# Stop here — show nothing until user picks a mode
+if mode == "— select an option —":
+    st.stop()
 
 st.divider()
+
+# ── Project info — only shown for Design and Review modes ──────────────────
+if "Q&A" not in mode:
+    with st.expander("📋 Project information (optional — will appear in report)"):
+        pi_col1, pi_col2 = st.columns(2)
+        with pi_col1:
+            proj_name   = st.text_input("Project name", placeholder="e.g. US-14 Bridge Deck Replacement")
+            location    = st.text_input("Location", placeholder="e.g. Brookings, SD")
+        with pi_col2:
+            prepared_by = st.text_input("Prepared by", placeholder="e.g. Dr. Mohammad Teymouri, PE")
+            company     = st.text_input("Company / Institution", placeholder="e.g. SDSU Teymouri Research Lab")
+
+    with st.expander("🏭 Material producers (optional — will appear in report)"):
+        mp_col1, mp_col2 = st.columns(2)
+        with mp_col1:
+            cement_prod = st.text_input("Cement producer", placeholder="e.g. Ash Grove Cement, Type I/II")
+            flyash_prod = st.text_input("Fly ash producer / class", placeholder="e.g. Basin Electric, Class F")
+            slag_prod   = st.text_input("Slag producer / grade", placeholder="e.g. Lafarge, Grade 100")
+        with mp_col2:
+            sf_prod     = st.text_input("Silica fume producer", placeholder="e.g. Elkem, densified")
+            pcc_prod    = st.text_input("PCC producer", placeholder="e.g. Western Sugar Cooperative, Brookings SD")
+
+    st.divider()
+else:
+    # Set defaults so variables exist when chat mode skips the expanders
+    proj_name = location = prepared_by = company = ""
+    cement_prod = flyash_prod = slag_prod = sf_prod = pcc_prod = ""
 
 # ─────────────────────────────────────────────────────────────────────────────
 # MODE A: REVIEW UPLOADED FILE
