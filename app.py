@@ -39,14 +39,38 @@ st.markdown("""
 /* Page background slightly warm */
 .stApp { background-color: #F8F9FC; }
 
-/* All default text — navy not black */
-html, body, [class*="css"] { color: #2A3A5C; }
+/* All default text — dark navy */
+html, body, [class*="css"] { color: #1A2B5F !important; }
+p, span, label, div { color: #1A2B5F; }
 
-/* Sidebar */
+/* Sidebar — force dark text */
 section[data-testid="stSidebar"] {
     background: #F0F4FB;
     border-right: 1px solid #E0E7F5;
 }
+section[data-testid="stSidebar"] * {
+    color: #1A2B5F !important;
+}
+section[data-testid="stSidebar"] .stMarkdown,
+section[data-testid="stSidebar"] .stCaption,
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] small,
+section[data-testid="stSidebar"] span {
+    color: #1A2B5F !important;
+}
+
+/* Main area text */
+.stMarkdown, .stText, .stCaption { color: #1A2B5F !important; }
+.stRadio label, .stCheckbox label, .stSelectbox label,
+.stNumberInput label, .stTextInput label, .stTextArea label {
+    color: #2A3A5C !important;
+}
+/* Toggle label */
+.stToggle label { color: #1A2B5F !important; }
+/* Buttons text */
+.stButton button { color: #1A2B5F !important; }
+/* Caption text */
+.stCaption { color: #5C6E91 !important; }
 
 /* Section header labels */
 .sec-label {
