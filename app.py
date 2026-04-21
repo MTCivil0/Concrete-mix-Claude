@@ -133,32 +133,154 @@ section[data-testid="stSidebar"] span {
     color: #0033A0; font-weight: 600; font-size: 13px; margin-bottom: 10px;
 }
 
-/* Inputs and selects — warmer */
+/* ── Form inputs — dark text on light background ── */
 input, select, textarea {
-    color: #2A3A5C !important;
-    background: #FAFBFF !important;
-    border-color: #D8E2F0 !important;
+    color: #1A2B5F !important;
+    background: #FFFFFF !important;
+    border-color: #C8D4EC !important;
+}
+input::placeholder, textarea::placeholder {
+    color: #9AAAC0 !important;
+}
+
+/* Selectbox text */
+div[data-testid="stSelectbox"] div[data-baseweb="select"] span,
+div[data-testid="stSelectbox"] div[data-baseweb="select"] div {
+    color: #1A2B5F !important;
+    background: #FFFFFF !important;
+}
+
+/* Number input */
+div[data-testid="stNumberInput"] input {
+    color: #1A2B5F !important;
+    background: #FFFFFF !important;
+}
+
+/* Text input */
+div[data-testid="stTextInput"] input {
+    color: #1A2B5F !important;
+    background: #FFFFFF !important;
+}
+
+/* Text area */
+div[data-testid="stTextArea"] textarea {
+    color: #1A2B5F !important;
+    background: #FFFFFF !important;
+}
+
+/* All form labels — dark and readable */
+label, .stRadio label, .stCheckbox label,
+.stSelectbox label, .stNumberInput label,
+.stTextInput label, .stTextArea label,
+.stSlider label, .stFileUploader label {
+    color: #1A2B5F !important;
+    font-weight: 500 !important;
+}
+
+/* Slider */
+div[data-testid="stSlider"] label { color: #1A2B5F !important; }
+div[data-testid="stSlider"] div[data-testid="stMarkdownContainer"] p {
+    color: #1A2B5F !important;
+}
+
+/* Checkbox text */
+div[data-testid="stCheckbox"] label p { color: #1A2B5F !important; }
+
+/* Toggle */
+div[data-testid="stToggle"] label p { color: #1A2B5F !important; }
+
+/* Expander header */
+details summary p, div[data-testid="stExpander"] summary p {
+    color: #1A2B5F !important;
+    font-weight: 500 !important;
+}
+
+/* Dataframe / table text */
+div[data-testid="stDataFrame"] { color: #1A2B5F !important; }
+.dvn-scroller { color: #1A2B5F !important; }
+
+/* Success / warning / error boxes */
+div[data-testid="stAlert"] p { color: #1A2B5F !important; }
+
+/* Info box */
+div[data-testid="stAlert"][kind="info"] p { color: #1A2B5F !important; }
+
+/* Download button */
+div[data-testid="stDownloadButton"] button {
+    color: #1A2B5F !important;
+    background: #FFFFFF !important;
+    border: 1.5px solid #C8D4EC !important;
+}
+div[data-testid="stDownloadButton"] button:hover {
+    background: #EEF2FB !important;
+    border-color: #0033A0 !important;
 }
 
 /* Metric cards */
 div[data-testid="stMetric"] {
     background: #EEF2FB;
-    border: 1px solid #D8E2F0;
+    border: 1px solid #C8D4EC;
     border-radius: 8px; padding: 12px;
 }
 div[data-testid="stMetricLabel"] { color: #5C6E91 !important; font-size: 12px !important; }
-div[data-testid="stMetricValue"] { color: #0033A0 !important; }
+div[data-testid="stMetricValue"] { color: #0033A0 !important; font-weight: 700 !important; }
+div[data-testid="stMetricDelta"] { color: #2A7A4B !important; }
+
+/* Spinner text */
+div[data-testid="stSpinner"] p { color: #1A2B5F !important; }
+
+/* Form submit button */
+div[data-testid="stForm"] button[kind="primaryFormSubmit"] {
+    background: #0033A0 !important;
+    color: white !important;
+    border: none !important;
+    font-weight: 600 !important;
+}
+div[data-testid="stForm"] button[kind="primaryFormSubmit"]:hover {
+    background: #002080 !important;
+}
+
+/* Caption and small text */
+.stCaption p { color: #5C6E91 !important; }
+small { color: #5C6E91 !important; }
+
+/* Divider */
+hr { border-color: #E0E7F5 !important; }
+
+/* Q&A chat messages */
+div[data-testid="stChatMessage"] p,
+div[data-testid="stChatMessage"] li,
+div[data-testid="stChatMessage"] td,
+div[data-testid="stChatMessage"] th {
+    color: #1A2B5F !important;
+}
+
+/* Chat input */
+div[data-testid="stChatInput"] textarea {
+    color: #1A2B5F !important;
+    background: #FFFFFF !important;
+}
 
 /* Suggestion buttons in Q&A */
 div[data-testid="column"] button {
     border-left: 3px solid #0033A0 !important;
     font-size: 12px !important;
-    color: #2A3A5C !important;
-    background: #FAFBFF !important;
+    color: #1A2B5F !important;
+    background: #FFFFFF !important;
+    border-radius: 6px !important;
 }
 div[data-testid="column"] button:hover {
     border-left: 3px solid #FFB71B !important;
     background: #EEF2FB !important;
+    color: #0033A0 !important;
+}
+
+/* File uploader */
+div[data-testid="stFileUploader"] label { color: #1A2B5F !important; }
+div[data-testid="stFileUploader"] p { color: #5C6E91 !important; }
+div[data-testid="stFileUploader"] button {
+    color: #1A2B5F !important;
+    background: #FFFFFF !important;
 }
 </style>
 """, unsafe_allow_html=True)
