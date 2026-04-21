@@ -120,9 +120,5 @@ Toggle in the sidebar. Use Demo Mode for testing the workflow.
 
 ## Notes
 
-- PCC (Precipitated Calcium Carbonate) is modeled as an inert micro-filler.
-  Optimal range: 3–8%. At 5%, expect ~+5–9% compressive strength gain
-  from particle packing effect (no reactive contribution to hydration).
-- All ACI 211.1 lookup tables are embedded in `src/aci211.py`.
 - This tool provides preliminary guidance only — not a substitute for
   a licensed structural engineer or certified concrete technologist.
