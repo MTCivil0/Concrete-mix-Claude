@@ -67,8 +67,7 @@ section[data-testid="stSidebar"] span {
 }
 /* Toggle label */
 .stToggle label { color: #1A2B5F !important; }
-/* Buttons text */
-.stButton button { color: #1A2B5F !important; }
+/* Buttons — default kept light, overridden per section */
 /* Caption text */
 .stCaption { color: #5C6E91 !important; }
 
@@ -258,6 +257,26 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Buttons that actually work for mode selection
+# Style the mode buttons to match light theme
+st.markdown("""
+<style>
+div[data-testid="stHorizontalBlock"] button {
+    background: #FAFBFF !important;
+    border: 1.5px solid #0033A0 !important;
+    color: #0033A0 !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    padding: 10px !important;
+}
+div[data-testid="stHorizontalBlock"] button:hover {
+    background: #EEF2FB !important;
+    border-color: #FFB71B !important;
+    color: #0033A0 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 b1, b2, b3, b4 = st.columns(4)
 with b1:
     if st.button("💬 Ask a question", use_container_width=True, key="btn_qa"):
